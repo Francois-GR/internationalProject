@@ -1,58 +1,32 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
+import 'package:arkit_plugin/arkit_plugin.dart';
+import 'package:vector_math/vector_math_64.dart';
 
-late List<CameraDescription> cameras;
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  cameras = await availableCameras();
-  runApp(MyApp());
+void main() => runApp(MaterialApp(home: MyApp()));
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
 }
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: CameraApp(),
-      ),
-    );
-  }
-}
-
-class CameraApp extends StatefulWidget {
-  @override
-  CameraAppState createState() => CameraAppState();
-}
-
-class CameraAppState extends State<CameraApp> {
-  late CameraController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = CameraController(cameras[0], ResolutionPreset.medium);
-    controller.initialize().then((_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {});
-    });
-  }
+class _MyAppState extends State<MyApp> {
+  late ARKitController arkitController;
 
   @override
   void dispose() {
-    controller.dispose();
+    arkitController.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (!controller.value.isInitialized) {
-      return Container();
-    }
+  Widget build(BuildContext context) => Scaffold(
+      appBar: AppBar(title: const Text('ARKit in Flutter')),
+      body: ARKitSceneView(onARKitViewCreated: onARKitViewCreated));
 
-    return CameraPreview(controller);
+  void onARKitViewCreated(ARKitController arkitController) {
+    this.arkitController = arkitController;
+    final node = ARKitNode(
+        geometry: ARKitSphere(radius: 0.1), position: Vector3(0, 0, -0.5));
+    this.arkitController.add(node);
   }
 }
