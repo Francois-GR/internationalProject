@@ -13,13 +13,16 @@ SerialReader::SerialReader(string PortID)
     while (openPort(portID) == false)
     {
         cout << "Failed to open port, trying again" << endl;
-        this_thread::sleep_for(chrono::milliseconds(10));
+        this_thread::sleep_for(chrono::seconds(10));
     }
+
+
+    cout << "Port succesfully opened   |   PortID: " << portID << endl;
 }
 
 SerialReader::~SerialReader()
 {
-
+    
 }
 
 void SerialReader::ReadSerialPort()
@@ -30,14 +33,43 @@ void SerialReader::ReadSerialPort()
 bool SerialReader::openPort(string portID)
 {
     bool retVal = false;
+    char portIDCString[20];     //standard port id's for linux should never excede 20 chars
 
-    // char[] tempPortID = string_to_char   <- figure this out somehow 
+    //converting portid string to char array
+    for (int i = 0; i < (int)portID.size(); i++)
+    {
+        portIDCString[i] = portID[i];
+        portIDCString[i+1] = '\0';
+    }
 
-    int serialPort = open(portID, O_RDWR);
+    serialPort = open(portIDCString, O_RDWR);
 
     if(serialPort < 0)
     {
         cout << "Error " << errno << " from open: " << strerror(errno) << endl;
+    }
+    else
+    {
+        retVal = true;
+    }
+    
+    return retVal;
+}
+
+bool SerialReader::configureTty()
+{
+    bool retVal = false;
+
+    if(tcgetattr(serialPort, &tty) != 0) 
+    {
+        printf("Error %i from tcgetattr: %s\n", errno, strerror(errno));
+    }
+    
+    cfsetspeed(&tty, B115200);
+
+    if (tcsetattr(serialPort, TCSANOW, &tty) != 0) 
+    {
+        printf("Error %i from tcsetattr: %s\n", errno, strerror(errno));
     }
     else
     {

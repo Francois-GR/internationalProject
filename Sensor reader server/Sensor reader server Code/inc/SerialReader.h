@@ -21,12 +21,15 @@ class SerialReader
 {
 private:
     string portID;
+    int serialPort;
+    struct termios tty;
     queue<string> completeMessageQueue;
     string currentMessage;
     bool startValueRecieved;
     mutex messageMutex;
 
     bool openPort(string portID);
+    bool configureTty();
 public:
     SerialReader(string PortID);
     ~SerialReader();
