@@ -1,0 +1,314 @@
+[
+    {
+        "id": "9cfca63f3793e589",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "61730dfad2cf753e",
+        "type": "serial-port",
+        "serialport": "/dev/ttyUSB0",
+        "serialbaud": "115200",
+        "databits": "8",
+        "parity": "none",
+        "stopbits": "1",
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": "10000"
+    },
+    {
+        "id": "50979bb725e1c752",
+        "type": "sqlitedb",
+        "db": "/home/pi/internationalProject/MegaProject.db",
+        "mode": "RWC"
+    },
+    {
+        "id": "d369925b024e4f5e",
+        "type": "debug",
+        "z": "9cfca63f3793e589",
+        "name": "Raw data",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 260,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "2ed49e0543d5bc51",
+        "type": "serial in",
+        "z": "9cfca63f3793e589",
+        "name": "Data input",
+        "serial": "61730dfad2cf753e",
+        "x": 100,
+        "y": 160,
+        "wires": [
+            [
+                "d369925b024e4f5e",
+                "6fdc148f0d679559"
+            ]
+        ]
+    },
+    {
+        "id": "6fdc148f0d679559",
+        "type": "function",
+        "z": "9cfca63f3793e589",
+        "name": "CRC8 Control",
+        "func": "CheckSuccesfull = true;\n\nflow.set(\"CheckSuccesfull\", CheckSuccesfull)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 280,
+        "y": 140,
+        "wires": [
+            [
+                "0176055303c6eec9"
+            ]
+        ],
+        "info": "Checks the message payload on the Cyclic redundancy check\n\nIf the payload fails the check the \"CheckSuccesfull\" bool is changed to false\nIf the payload succeeds the check the \"CheckSuccesfull\" bool is changed to true"
+    },
+    {
+        "id": "0176055303c6eec9",
+        "type": "switch",
+        "z": "9cfca63f3793e589",
+        "name": "CRC8 Succes",
+        "property": "CheckSuccesfull",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "false",
+                "vt": "jsonata"
+            },
+            {
+                "t": "eq",
+                "v": "true",
+                "vt": "jsonata"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 480,
+        "y": 140,
+        "wires": [
+            [
+                "34e333579c53d41a"
+            ],
+            [
+                "fac1bbdbcdab1ddc"
+            ]
+        ],
+        "info": "Checks if the \"CheckSuccesfull\" bool is true/false\n\nif its false a message is sent to the debug console and the flow is ended\nif its true the payload continues on to the next logic in the flow"
+    },
+    {
+        "id": "34e333579c53d41a",
+        "type": "debug",
+        "z": "9cfca63f3793e589",
+        "name": "CRC8 debug",
+        "active": false,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "\"CRC8 failed, discarding payload\"",
+        "targetType": "jsonata",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "8875f448c4ce01ed",
+        "type": "function",
+        "z": "9cfca63f3793e589",
+        "name": "Split playload",
+        "func": "var SensorID = \"\";\nvar Temperature = 0;\nvar Humidity = 0;\nvar LightIntensity = 0;\nvar NH3PPM = 0;\nvar NO2PPM = 0;\nvar COPPM = 0;\nvar CO2PPM = 0;\nvar AtmosphericPressure = 0;\n\nSensorID = msg.payload.slice(2, 6);\n\nstartIndex = 17;    //where the data starts\nincrement = 12;     //the spacing between data parts\nendIndexNr = 13;    //the value to subtract from the total length to just have sensible data\nfor(i = startIndex; i < msg.payload.length - endIndexNr; i += increment)\n{\n    sensorType = msg.payload.substr(i, 2); //size of sensor type data is 2\n    readData = msg.payload.substr(i+3, 8); //+3 skips the sensor type, 8 is size of data\n\n    switch(sensorType)\n    {\n        case \"01\":\n            Temperature = readData;\n            break;\n        case \"02\":\n            Humidity = readData;\n            break;\n        case \"1a\":\n            LightIntensity = readData;\n            break;\n        case \"24\":\n            NH3PPM = readData;\n            break;\n        case \"25\":\n            NO2PPM = readData;\n            break;\n        case \"26\":\n            COPPM = readData;\n            break;\n        case \"27\":\n            CO2PPM = readData;\n            break;\n        case \"28\":\n            AtmosphericPressure = readData;\n            break; \n    }\n}\n\nflow.set(\"SensorID\", SensorID);\nflow.set(\"Temperature\", Temperature);\nflow.set(\"Humidity\", Humidity);\nflow.set(\"LightIntensity\", LightIntensity);\nflow.set(\"NH3PPM\", NH3PPM);\nflow.set(\"NO2PPM\", NO2PPM);\nflow.set(\"COPPM\", COPPM);\nflow.set(\"CO2PPM\", CO2PPM);\nflow.set(\"AtmosphericPressure\", AtmosphericPressure);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 260,
+        "wires": [
+            [
+                "f1d61c16ce87da39"
+            ]
+        ]
+    },
+    {
+        "id": "8871d346405b6c32",
+        "type": "debug",
+        "z": "9cfca63f3793e589",
+        "name": "Deciphered data",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "c29763bcc6b03dc3",
+        "type": "function",
+        "z": "9cfca63f3793e589",
+        "name": "Create value debug message",
+        "func": "msg.payload = \"\";\n\n//msg.payload += (\"{var name}: \" + flow.get({var name}) + \"\\n\");\nmsg.payload += (\"Sensor ID = \" + flow.get(\"SensorID\") + \"\\n\");\nmsg.payload += (\"Time stamp = \" + flow.get(\"time\") + \"\\n\");\nmsg.payload += (\"Temperature = \" + flow.get(\"Temperature\") + \"\\n\");\nmsg.payload += (\"Humidity = \" + flow.get(\"Humidity\") + \"\\n\");\nmsg.payload += (\"Light Intensity = \" + flow.get(\"LightIntensity\") + \"\\n\");\nmsg.payload += (\"NH3 PPM = \" + flow.get(\"NH3PPM\") + \"\\n\");\nmsg.payload += (\"NO2 PPM = \" + flow.get(\"NO2PPM\") + \"\\n\");\nmsg.payload += (\"CO PPM = \" + flow.get(\"COPPM\") + \"\\n\");\nmsg.payload += (\"CO2 PPM = \" + flow.get(\"CO2PPM\") + \"\\n\");\nmsg.payload += (\"Atmospheric pressure = \" + flow.get(\"AtmosphericPressure\") + \" bar\\n\");\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 220,
+        "wires": [
+            [
+                "8871d346405b6c32"
+            ]
+        ]
+    },
+    {
+        "id": "42d121ba0a61eb4d",
+        "type": "inject",
+        "z": "9cfca63f3793e589",
+        "name": "Test data",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "D 168Y 608c 608b 28 447b7333 27 43ff8000 26 40724e4c 25 3f74e89e 24 3bee7d17 01 41c2c423 02 420352c0 1a 437e668d 23",
+        "payloadType": "str",
+        "x": 100,
+        "y": 120,
+        "wires": [
+            [
+                "6fdc148f0d679559",
+                "d369925b024e4f5e"
+            ]
+        ]
+    },
+    {
+        "id": "f1d61c16ce87da39",
+        "type": "function",
+        "z": "9cfca63f3793e589",
+        "name": "Translate payload parts",
+        "func": "var allData =  [flow.get(\"Temperature\"), flow.get(\"Humidity\"), \n                flow.get(\"LightIntensity\"), flow.get(\"NH3PPM\"), \n                flow.get(\"NO2PPM\"), flow.get(\"COPPM\"), flow.get(\"CO2PPM\"), \n                flow.get(\"AtmosphericPressure\")];\n\nfor(var j = 0; j < 8; j++)\n{\n    var currentData = allData[j];\n    var newData = 0;\n    \n    var int = parseInt(currentData, 16);\n    if (int > 0 || int < 0) {\n        var sign = (int >>> 31) ? -1 : 1;\n        var exp = (int >>> 23 & 0xff) - 127;\n        var mantissa = ((int & 0x7fffff) + 0x800000).toString(2);\n        var float32 = 0;\n        for (i = 0; i < mantissa.length; i += 1) { float32 += parseInt(mantissa[i]) ? Math.pow(2, exp) : 0; exp-- }\n        newData = float32 * sign;\n    }\n    \n    allData[j] = newData;\n}\n\nflow.set(\"Temperature\", allData[0]);\nflow.set(\"Humidity\", allData[1]);\nflow.set(\"LightIntensity\", allData[2]);\nflow.set(\"NH3PPM\", allData[3]);\nflow.set(\"NO2PPM\", allData[4]);\nflow.set(\"COPPM\", allData[5]);\nflow.set(\"CO2PPM\", allData[6]);\nflow.set(\"AtmosphericPressure\", allData[7]);\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 260,
+        "wires": [
+            [
+                "c29763bcc6b03dc3",
+                "754effec8c08a86f"
+            ]
+        ]
+    },
+    {
+        "id": "754effec8c08a86f",
+        "type": "function",
+        "z": "9cfca63f3793e589",
+        "name": "Prepare payload for sending",
+        "func": "msg.payload={};\n\nvar SensorID = flow.get(\"SensorID\");\nvar Time = flow.get(\"time\");\nvar Temperature = flow.get(\"Temperature\"); \nvar Humidity = flow.get(\"Humidity\");\nvar LightIntensity = flow.get(\"LightIntensity\"); \nvar NH3PPM = flow.get(\"NH3PPM\");\nvar NO2PPM = flow.get(\"NO2PPM\"); \nvar COPPM = flow.get(\"COPPM\"); \nvar CO2PPM = flow.get(\"CO2PPM\");\nvar AtmosphericPressure = flow.get(\"AtmosphericPressure\");\n\nmsg.topic= `INSERT INTO Sensor_Data \\\n            ('SensorSensorID', 'TimeStamp', \\\n            'Temperature', 'Humidity', 'LightIntensity', \\\n            'NH3PPM', 'NO2PPM', 'COPPM', 'CO2PPM', \\\n            'AtmosphericPressure') \\\n            \\\n            VALUES \\\n            ('${SensorID}', '${Time}', ${Temperature}, \\\n            ${Humidity}, ${LightIntensity}, ${NH3PPM}, ${NO2PPM}, \\\n            ${COPPM}, ${CO2PPM}, ${AtmosphericPressure})`;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 340,
+        "wires": [
+            [
+                "eb657b1b5cb3246c"
+            ]
+        ]
+    },
+    {
+        "id": "eb657b1b5cb3246c",
+        "type": "sqlite",
+        "z": "9cfca63f3793e589",
+        "mydb": "50979bb725e1c752",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "Send to DB",
+        "x": 470,
+        "y": 340,
+        "wires": [
+            [
+                "21404875972a48be"
+            ]
+        ]
+    },
+    {
+        "id": "21404875972a48be",
+        "type": "debug",
+        "z": "9cfca63f3793e589",
+        "name": "Return msg SQL querry",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "fac1bbdbcdab1ddc",
+        "type": "function",
+        "z": "9cfca63f3793e589",
+        "name": "Calculate time",
+        "func": "var date = 0;\n\n//getting difference between the 2 timestamps\ntime1 = Number('0x' + msg.payload.substr(7,4));\ntime2 = Number('0x' + msg.payload.substr(12,4));\nvar timeDif = time1 - time2;\n\n//calculating difference in seconds\ntimeDif = Math.ceil(0.5 * timeDif);\n\n//getting actual times\ndate = new Date();\ndate = date.getUTCFullYear() + '-' +\n    ('00' + (date.getUTCMonth()+1)).slice(-2) + '-' +\n    ('00' + date.getUTCDate()).slice(-2) + ' ' + \n    ('00' + date.getUTCHours()).slice(-2) + ':' + \n    ('00' + date.getUTCMinutes()).slice(-2) + ':' + \n    ('00' + (date.getUTCSeconds()- timeDif)).slice(-2);\n\nflow.set(\"time\", date);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 120,
+        "y": 260,
+        "wires": [
+            [
+                "8875f448c4ce01ed"
+            ]
+        ]
+    }
+]

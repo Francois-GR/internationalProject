@@ -424,27 +424,5 @@
                 "file": "/home/pi/internationalProject/node-red/node_modules/node-red-node-sqlite/sqlite.js"
             }
         }
-    },
-    "node-red-node-serialport": {
-        "name": "node-red-node-serialport",
-        "version": "1.0.1",
-        "local": true,
-        "user": true,
-        "nodes": {
-            "serialport": {
-                "name": "serialport",
-                "types": [
-                    "serial in",
-                    "serial out",
-                    "serial request",
-                    "serial-port"
-                ],
-                "enabled": true,
-                "local": true,
-                "user": false,
-                "module": "node-red-node-serialport",
-                "file": "/home/pi/internationalProject/node-red/node_modules/node-red-node-serialport/25-serial.js"
-            }
-        }
     }
 }
