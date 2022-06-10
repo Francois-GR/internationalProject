@@ -2,7 +2,15 @@
     {
         "id": "9cfca63f3793e589",
         "type": "tab",
-        "label": "Flow 1",
+        "label": "Recieving data",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2523eb601cca8209",
+        "type": "tab",
+        "label": "Handling data requests",
         "disabled": false,
         "info": "",
         "env": []
@@ -11,7 +19,7 @@
         "id": "61730dfad2cf753e",
         "type": "serial-port",
         "serialport": "/dev/ttyUSB0",
-        "serialbaud": "57600",
+        "serialbaud": "115200",
         "databits": "8",
         "parity": "none",
         "stopbits": "1",
@@ -45,7 +53,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 260,
+        "x": 280,
         "y": 80,
         "wires": []
     },
@@ -55,7 +63,7 @@
         "z": "9cfca63f3793e589",
         "name": "Data input",
         "serial": "61730dfad2cf753e",
-        "x": 100,
+        "x": 120,
         "y": 160,
         "wires": [
             [
@@ -75,7 +83,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 280,
+        "x": 300,
         "y": 140,
         "wires": [
             [
@@ -106,7 +114,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 480,
+        "x": 500,
         "y": 140,
         "wires": [
             [
@@ -131,7 +139,7 @@
         "targetType": "jsonata",
         "statusVal": "",
         "statusType": "auto",
-        "x": 680,
+        "x": 700,
         "y": 80,
         "wires": []
     },
@@ -146,7 +154,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 310,
+        "x": 330,
         "y": 260,
         "wires": [
             [
@@ -167,7 +175,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 800,
+        "x": 820,
         "y": 180,
         "wires": []
     },
@@ -182,7 +190,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 800,
+        "x": 820,
         "y": 220,
         "wires": [
             [
@@ -211,7 +219,7 @@
         "topic": "",
         "payload": "D 168Y 608c 608b 28 447b7333 27 43ff8000 26 40724e4c 25 3f74e89e 24 3bee7d17 01 41c2c423 02 420352c0 1a 437e668d 23",
         "payloadType": "str",
-        "x": 100,
+        "x": 120,
         "y": 120,
         "wires": [
             [
@@ -231,7 +239,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 530,
+        "x": 550,
         "y": 260,
         "wires": [
             [
@@ -251,7 +259,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 220,
+        "x": 240,
         "y": 340,
         "wires": [
             [
@@ -267,7 +275,7 @@
         "sqlquery": "msg.topic",
         "sql": "",
         "name": "Send to DB",
-        "x": 470,
+        "x": 490,
         "y": 340,
         "wires": [
             [
@@ -288,7 +296,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 690,
+        "x": 710,
         "y": 340,
         "wires": []
     },
@@ -303,12 +311,130 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 120,
+        "x": 140,
         "y": 260,
         "wires": [
             [
                 "8875f448c4ce01ed"
             ]
         ]
+    },
+    {
+        "id": "12ed34f4082fb0ec",
+        "type": "http in",
+        "z": "2523eb601cca8209",
+        "name": "Data request",
+        "url": "/data",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 90,
+        "y": 60,
+        "wires": [
+            [
+                "1dc2a8b52c6e1b03",
+                "9c9004b6372d801e"
+            ]
+        ]
+    },
+    {
+        "id": "7420abc9fb0331cb",
+        "type": "http response",
+        "z": "2523eb601cca8209",
+        "name": "Data response",
+        "statusCode": "",
+        "headers": {},
+        "x": 1020,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "325c427e611cffbe",
+        "type": "sqlite",
+        "z": "2523eb601cca8209",
+        "mydb": "50979bb725e1c752",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "Request data from DB",
+        "x": 560,
+        "y": 60,
+        "wires": [
+            [
+                "218610e4af9ec977",
+                "e40168bff4d07e8c"
+            ]
+        ]
+    },
+    {
+        "id": "1dc2a8b52c6e1b03",
+        "type": "function",
+        "z": "2523eb601cca8209",
+        "name": "Configure SQL command",
+        "func": "msg.topic = `SELECT TimeStamp, CO2PPM FROM Sensor_Data LIMIT 5`;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 60,
+        "wires": [
+            [
+                "325c427e611cffbe"
+            ]
+        ]
+    },
+    {
+        "id": "218610e4af9ec977",
+        "type": "function",
+        "z": "2523eb601cca8209",
+        "name": "Configure data to send",
+        "func": "let timeStamp = msg.payload\nlet Co2PPM = msg.payload\n\nmsg.payload = { TimeStamp: timeStamp, CO2PPM: Co2PPM}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 60,
+        "wires": [
+            [
+                "7420abc9fb0331cb"
+            ]
+        ]
+    },
+    {
+        "id": "9c9004b6372d801e",
+        "type": "debug",
+        "z": "2523eb601cca8209",
+        "name": "Http request gotten",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "\"Http request gotten\"",
+        "targetType": "jsonata",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 290,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "e40168bff4d07e8c",
+        "type": "debug",
+        "z": "2523eb601cca8209",
+        "name": "Return msg SQL querry",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 810,
+        "y": 100,
+        "wires": []
     }
 ]
