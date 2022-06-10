@@ -6,6 +6,7 @@ const PORT = process.env.PORT || 3000
 
 let app = express()
 
+app.use(express.static(__dirname))
 app.set('view enige', 'ejs')
 app.use('/', router)
 
