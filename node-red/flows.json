@@ -45,7 +45,7 @@
         "type": "debug",
         "z": "9cfca63f3793e589",
         "name": "Raw data",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -370,7 +370,7 @@
         "type": "function",
         "z": "2523eb601cca8209",
         "name": "Configure SQL command",
-        "func": "msg.topic = `SELECT TimeStamp, CO2PPM FROM Sensor_Data LIMIT 5`;\nreturn msg;",
+        "func": "msg.topic = `SELECT TimeStamp, CO2PPM ORDER BY TimeStamp FROM Sensor_Data LIMIT 5`;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -434,7 +434,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 810,
-        "y": 100,
+        "y": 200,
         "wires": []
     }
 ]
